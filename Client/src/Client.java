@@ -55,13 +55,21 @@ public class Client implements Runnable {
      **/
     BufferedInputStream reader = null;
 
+    private long now;
+    private long start;
+    private long time;
+
     @Override
     public void run() {
         try {
+            start = System.currentTimeMillis();
             if (shakeHands()) {
                 if (sendFile2()) {
-                    // 等待20s，让服务器将数据写入文件中，再与服务器开始断开连接
-                    Thread.sleep(20000);
+                    now = System.currentTimeMillis();
+                    time = now - start;
+                    System.out.println("耗时：" + time + "ms");
+                    // 等待10s，让服务器将数据写入文件中，再与服务器开始断开连接,可以根据要传输文件大小，适当更换
+                    Thread.sleep(10000);
                     if (waveHands()) {
                         System.out.println(state + " 与" + UDPutils.getStringIp(targetIp) + "断开成功！");
                     }
@@ -221,7 +229,6 @@ public class Client implements Runnable {
                 seqNum++;
             }
             System.out.println("文件发送成功！！！");
-            System.out.println("seqNum = " + seqNum);
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
@@ -239,7 +246,7 @@ public class Client implements Runnable {
             reader = new BufferedInputStream(new FileInputStream(fileSource));
             int fileLength = reader.available();
             byte[] allData = new byte[fileLength];
-            int times = (fileLength / (2048 - 361)) + 1;
+            int times = (fileLength / (2048)) + 1;
             System.out.println("\n文件大小为：" + reader.read(allData, 0, fileLength) + "bit");
             System.out.println("文件将分为：" + times + " 个数据报进行发送。");
             int tempSeq = seqNum;
@@ -295,7 +302,8 @@ public class Client implements Runnable {
                     DatagramPacket receivePacket = new DatagramPacket(rec, 0, rec.length);
 
                     try {
-                        socket.setSoTimeout(1);
+                        // 定时10ms
+                        socket.setSoTimeout(10);
                         socket.receive(receivePacket);
                     } catch (IOException e) {
                         continue;
@@ -369,7 +377,6 @@ public class Client implements Runnable {
                         state = "ESTAB-LISHEN";
                         continue;
                     }
-                    System.out.println(seqNum + "  recAck=" + udp.getAck());
                     // 收到响应，判断各项数值是否符合要求,符合进入 FIN-WAIT-2 状态，等待Server发起连接断开请求，反之Client重新发起，断开请求
                     if ("1".equals(udp.getACK()) && seqNum == Integer.parseInt(udp.getAck())) {
                         System.out.println(state + "  接收：ACK=1，seq=" + udp.getSequence_Number() + "，ack=" + udp.getAck() + " request successful");
