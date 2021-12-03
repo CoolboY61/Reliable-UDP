@@ -58,11 +58,19 @@ public class Server implements Runnable {
      **/
     BufferedOutputStream receiver = null;
 
+    private long now;
+    private long start;
+    private long time;
+
     @Override
     public void run() {
         try {
+            start = System.currentTimeMillis();
             if (shakeHands()) {
                 if (receiveFile2()) {
+                    now = System.currentTimeMillis();
+                    time = now - start;
+                    System.out.println("耗时：" + time + "ms");
                     if (waveHands()) {
                         System.out.println(state + "  与 " + UDPutils.getStringIp(targetIp) + " 成功断开连接！\n");
                     }
@@ -85,7 +93,7 @@ public class Server implements Runnable {
         this.sourceIp = InetAddress.getByName(sourceIp);
         this.sourcePort = sourcePort;
         this.fileSource = new File(fileSource);
-        this.windowSize = 4;
+        this.windowSize = 8;
         try {
             socket = new DatagramSocket(Integer.parseInt(sourcePort));
         } catch (SocketException e) {
@@ -199,13 +207,12 @@ public class Server implements Runnable {
                 byte[] temp = new byte[2060];
                 DatagramPacket receivePacket = new DatagramPacket(temp, 0, temp.length);
                 try {
-                    // 等待5s，若5s未再接收到文件，则说明文件传输结束，并且将数据输入文件中
-                    socket.setSoTimeout(5000);
+                    // 等待100ms，若100ms未再接收到文件，则说明文件传输结束，并且将数据输入文件中
+                    socket.setSoTimeout(100);
                     socket.receive(receivePacket);
                 } catch (IOException e) {
                     System.out.println(state + "  文件接收完毕！ 共接收了 " + data.length + " bit的数据。");
                     System.out.println("接收成功！");
-                    System.out.println("seq = " + seqNum + " " + "ack = " + ack);
                     // 数据写入文件
                     receiver.write(data);
                     receiver.flush();
@@ -261,14 +268,14 @@ public class Server implements Runnable {
                 byte[] temp = new byte[2060];
                 DatagramPacket receivePacket = new DatagramPacket(temp, 0, temp.length);
                 try {
-                    // 等待10s，若10s未再接收到文件，则说明文件传输结束，并且将数据输入文件中
-                    socket.setSoTimeout(10000);
+                    // 等待100ms，若100ms未再接收到文件，则说明文件传输结束，并且将数据输入文件中
+                    socket.setSoTimeout(100);
                     socket.receive(receivePacket);
                 } catch (IOException e) {
                     break;
                 }
-                // 设置丢包率为0.2
-                if (Math.random() <= 0.4) {
+                // 设置丢包率为0.1
+                if (Math.random() <= 0.1) {
                     continue;
                 }
                 udp = (UDP) UDPutils.byteToObject(temp);
