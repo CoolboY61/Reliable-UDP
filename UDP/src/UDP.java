@@ -19,13 +19,14 @@ public class UDP implements Serializable {
      * destination_Port：    目的端口 2字节
      * length：              数据报总长度 2字节
      * Checksum：            检验和 2字节
-     * <p>
+     *
      * sequence_Number：     确认号 4字节
      * ACK：                 确认ACK 1字节
      * ack：                 ack对应seq
      * SYN：                 同步SYN
      * Fin：                 终止FIN
      * Window_Size：         窗口大小
+     * data                  数据区
      */
     private byte[] source_Port = new byte[2];
     private byte[] destination_Port = new byte[2];
