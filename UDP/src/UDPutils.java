@@ -165,7 +165,7 @@ public class UDPutils {
         UDP udp = null;
         try {
             // 定时10毫秒
-            socket.setSoTimeout(1);
+            socket.setSoTimeout(10);
             socket.receive(receivePacket);
         } catch (IOException e) {
             System.out.println(state + "  Seq = " + seqNum + " 数据报丢失，重新发送分块");
